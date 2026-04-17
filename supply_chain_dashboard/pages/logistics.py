@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html, Input, Output, State, dash_table
 from data import apply_filters
 from components.detail_table import build_drill_table
+from theme import CHART_LAYOUT, COLORS, TABLE_STYLE
 
 
 # ── Pure aggregation functions ────────────────────────────────────────────────
@@ -33,13 +34,14 @@ def layout():
             dbc.Col(dcc.Graph(id="logistics-scatter-chart"), width=6),
         ]),
         dbc.Row([
-            dbc.Col(html.H5("SKU Detail", className="mt-3"), width=12),
+            dbc.Col(html.H5("SKU Detail", className="mt-3",
+                            style={"color": "#E2E8F0", "fontFamily": "Fira Sans, Inter, sans-serif",
+                                   "fontWeight": "700", "fontSize": "0.85rem",
+                                   "textTransform": "uppercase", "letterSpacing": "0.08em"}), width=12),
             dbc.Col(dash_table.DataTable(
                 id="logistics-drill-table",
                 page_size=10,
-                style_table={"overflowX": "auto"},
-                style_cell={"textAlign": "left", "padding": "8px"},
-                style_header={"fontWeight": "bold"},
+                **TABLE_STYLE,
             ), width=12),
         ]),
     ], fluid=True)
@@ -57,10 +59,12 @@ def register_callbacks(app, df):
     def update_carrier_cost(product_type, location, supplier):
         filtered = apply_filters(df, product_type, location, supplier)
         data = compute_shipping_cost_by_carrier(filtered)
-        return px.bar(data, x="carrier", y="shipping_cost",
-                      title="Avg Shipping Cost by Carrier",
-                      labels={"carrier": "Carrier", "shipping_cost": "Avg Shipping Cost ($)"},
-                      color="carrier")
+        fig = px.bar(data, x="carrier", y="shipping_cost",
+                     title="Avg Shipping Cost by Carrier",
+                     labels={"carrier": "Carrier", "shipping_cost": "Avg Shipping Cost ($)"},
+                     color="carrier", color_discrete_sequence=COLORS)
+        fig.update_layout(**CHART_LAYOUT)
+        return fig
 
     @app.callback(
         Output("logistics-transport-cost-chart", "figure"),
@@ -71,10 +75,12 @@ def register_callbacks(app, df):
     def update_transport_cost(product_type, location, supplier):
         filtered = apply_filters(df, product_type, location, supplier)
         data = compute_transport_cost_by_mode(filtered)
-        return px.bar(data, x="transport_mode", y="transport_cost",
-                      title="Avg Transport Cost by Mode",
-                      labels={"transport_mode": "Mode", "transport_cost": "Avg Cost ($)"},
-                      color="transport_mode")
+        fig = px.bar(data, x="transport_mode", y="transport_cost",
+                     title="Avg Transport Cost by Mode",
+                     labels={"transport_mode": "Mode", "transport_cost": "Avg Cost ($)"},
+                     color="transport_mode", color_discrete_sequence=COLORS)
+        fig.update_layout(**CHART_LAYOUT)
+        return fig
 
     @app.callback(
         Output("logistics-route-time-chart", "figure"),
@@ -85,10 +91,12 @@ def register_callbacks(app, df):
     def update_route_time(product_type, location, supplier):
         filtered = apply_filters(df, product_type, location, supplier)
         data = compute_shipping_time_by_route(filtered)
-        return px.bar(data, x="routes", y="shipping_time",
-                      title="Avg Shipping Time by Route",
-                      labels={"routes": "Route", "shipping_time": "Avg Shipping Time (days)"},
-                      color="routes")
+        fig = px.bar(data, x="routes", y="shipping_time",
+                     title="Avg Shipping Time by Route",
+                     labels={"routes": "Route", "shipping_time": "Avg Shipping Time (days)"},
+                     color="routes", color_discrete_sequence=COLORS)
+        fig.update_layout(**CHART_LAYOUT)
+        return fig
 
     @app.callback(
         Output("logistics-scatter-chart", "figure"),
@@ -98,11 +106,14 @@ def register_callbacks(app, df):
     )
     def update_scatter(product_type, location, supplier):
         filtered = apply_filters(df, product_type, location, supplier)
-        return px.scatter(filtered, x="shipping_cost", y="shipping_time",
-                          color="transport_mode",
-                          title="Shipping Cost vs. Shipping Time by Transport Mode",
-                          labels={"shipping_cost": "Shipping Cost ($)", "shipping_time": "Shipping Time (days)"},
-                          hover_data=["sku", "carrier"])
+        fig = px.scatter(filtered, x="shipping_cost", y="shipping_time",
+                         color="transport_mode",
+                         title="Shipping Cost vs. Shipping Time by Transport Mode",
+                         labels={"shipping_cost": "Shipping Cost ($)", "shipping_time": "Shipping Time (days)"},
+                         color_discrete_sequence=COLORS,
+                         hover_data=["sku", "carrier"])
+        fig.update_layout(**CHART_LAYOUT)
+        return fig
 
     @app.callback(
         Output("logistics-drill-table", "data"),

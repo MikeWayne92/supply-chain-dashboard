@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html, Input, Output, State, dash_table
 from data import apply_filters
 from components.detail_table import build_drill_table
+from theme import CHART_LAYOUT, COLORS, TABLE_STYLE
 
 
 # ── Pure aggregation functions ────────────────────────────────────────────────
@@ -43,13 +44,14 @@ def layout():
             dbc.Col(dcc.Graph(id="inventory-prod-mfg-chart"), width=6),
         ]),
         dbc.Row([
-            dbc.Col(html.H5("SKU Detail", className="mt-3"), width=12),
+            dbc.Col(html.H5("SKU Detail", className="mt-3",
+                            style={"color": "#E2E8F0", "fontFamily": "Fira Sans, Inter, sans-serif",
+                                   "fontWeight": "700", "fontSize": "0.85rem",
+                                   "textTransform": "uppercase", "letterSpacing": "0.08em"}), width=12),
             dbc.Col(dash_table.DataTable(
                 id="inventory-drill-table",
                 page_size=10,
-                style_table={"overflowX": "auto"},
-                style_cell={"textAlign": "left", "padding": "8px"},
-                style_header={"fontWeight": "bold"},
+                **TABLE_STYLE,
             ), width=12),
         ]),
     ], fluid=True)
@@ -70,7 +72,9 @@ def register_callbacks(app, df):
         fig = px.bar(data, x="sku", y=["units_sold", "stock_level"],
                      title="Top 20 SKUs: Units Sold vs Stock Level",
                      labels={"value": "Units", "variable": "Metric"},
-                     barmode="group")
+                     barmode="group",
+                     color_discrete_sequence=[COLORS[0], COLORS[1]])
+        fig.update_layout(**CHART_LAYOUT)
         return fig
 
     @app.callback(
@@ -81,11 +85,14 @@ def register_callbacks(app, df):
     )
     def update_order_avail(product_type, location, supplier):
         filtered = apply_filters(df, product_type, location, supplier)
-        return px.scatter(filtered, x="order_quantity", y="availability",
-                          color="product_type",
-                          title="Order Quantity vs Availability",
-                          labels={"order_quantity": "Order Quantity", "availability": "Availability (%)"},
-                          hover_data=["sku"])
+        fig = px.scatter(filtered, x="order_quantity", y="availability",
+                         color="product_type",
+                         title="Order Quantity vs Availability",
+                         labels={"order_quantity": "Order Quantity", "availability": "Availability (%)"},
+                         color_discrete_sequence=COLORS,
+                         hover_data=["sku"])
+        fig.update_layout(**CHART_LAYOUT)
+        return fig
 
     @app.callback(
         Output("inventory-lead-time-chart", "figure"),
@@ -97,10 +104,12 @@ def register_callbacks(app, df):
         filtered = apply_filters(df, product_type, location, supplier)
         data = compute_lead_time_by_supplier_location(filtered)
         data["supplier_location"] = data["supplier"] + " / " + data["location"]
-        return px.bar(data, x="supplier_location", y="product_lead_time",
-                      title="Avg Lead Time by Supplier & Location",
-                      labels={"supplier_location": "Supplier / Location", "product_lead_time": "Avg Lead Time (days)"},
-                      color="supplier")
+        fig = px.bar(data, x="supplier_location", y="product_lead_time",
+                     title="Avg Lead Time by Supplier & Location",
+                     labels={"supplier_location": "Supplier / Location", "product_lead_time": "Avg Lead Time (days)"},
+                     color="supplier", color_discrete_sequence=COLORS)
+        fig.update_layout(**CHART_LAYOUT)
+        return fig
 
     @app.callback(
         Output("inventory-prod-mfg-chart", "figure"),
@@ -111,10 +120,13 @@ def register_callbacks(app, df):
     def update_prod_mfg(product_type, location, supplier):
         filtered = apply_filters(df, product_type, location, supplier)
         data = compute_production_vs_mfg_lead_time(filtered)
-        return px.bar(data, x="product_type", y=["production_volume", "mfg_lead_time"],
-                      title="Avg Production Volume vs Manufacturing Lead Time",
-                      labels={"value": "Value", "variable": "Metric"},
-                      barmode="group")
+        fig = px.bar(data, x="product_type", y=["production_volume", "mfg_lead_time"],
+                     title="Avg Production Volume vs Manufacturing Lead Time",
+                     labels={"value": "Value", "variable": "Metric"},
+                     barmode="group",
+                     color_discrete_sequence=[COLORS[2], COLORS[3]])
+        fig.update_layout(**CHART_LAYOUT)
+        return fig
 
     @app.callback(
         Output("inventory-drill-table", "data"),
