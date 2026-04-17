@@ -46,3 +46,12 @@ def test_compute_revenue_by_location_returns_dataframe(df):
     assert "location" in result.columns
     assert "revenue" in result.columns
     assert len(result) > 0
+
+
+def test_compute_inspection_distribution_returns_dataframe(df):
+    from pages.overview import compute_inspection_distribution
+    result = compute_inspection_distribution(df)
+    assert "inspection_result" in result.columns
+    assert "count" in result.columns
+    assert set(result["inspection_result"]).issubset({"Pass", "Fail", "Pending"})
+    assert all(result["count"] > 0)
