@@ -42,10 +42,10 @@ def apply_filters(
     supplier: str = "All",
 ) -> pd.DataFrame:
     filtered = df.copy()
-    if product_type and product_type != "All":
+    if product_type != "All":
         filtered = filtered[filtered["product_type"] == product_type]
-    if location and location != "All":
+    if location != "All":
         filtered = filtered[filtered["location"] == location]
-    if supplier and supplier != "All":
+    if supplier != "All":
         filtered = filtered[filtered["supplier"] == supplier]
     return filtered
