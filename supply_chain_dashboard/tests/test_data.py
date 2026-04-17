@@ -74,3 +74,24 @@ def test_apply_filters_combined():
     result = apply_filters(df, product_type="skincare", location="Mumbai", supplier="All")
     assert all(result["product_type"] == "skincare")
     assert all(result["location"] == "Mumbai")
+
+
+def test_build_drill_table_returns_columns_and_data():
+    from components.detail_table import build_drill_table
+    df = load_data(CSV_PATH)
+    columns, data = build_drill_table(df.head(3))
+    assert isinstance(columns, list)
+    assert isinstance(data, list)
+    assert len(data) == 3
+    col_ids = [c["id"] for c in columns]
+    assert "sku" in col_ids
+    assert "revenue" in col_ids
+    assert "defect_rate" in col_ids
+
+
+def test_build_drill_table_empty_df():
+    from components.detail_table import build_drill_table
+    df = load_data(CSV_PATH)
+    columns, data = build_drill_table(df.iloc[0:0])
+    assert data == []
+    assert isinstance(columns, list)
