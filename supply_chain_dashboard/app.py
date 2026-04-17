@@ -1,3 +1,4 @@
+import os
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html, Input, Output
@@ -8,7 +9,7 @@ import pages.supplier as supplier
 import pages.logistics as logistics
 import pages.inventory as inventory
 
-DATA_PATH = "supply_chain_data.csv"
+DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "supply_chain_data.csv")
 df = load_data(DATA_PATH)
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
